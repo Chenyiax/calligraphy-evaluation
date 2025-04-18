@@ -1,0 +1,37 @@
+server:
+  port: 8888
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://124.220.237.75:3306/calligraphy_evaluation
+    username: root
+    password: 20010410
+  #  rabbitmq:
+  #    host: 47.100.36.46
+  #    port: 5672
+  #    username: user
+  #    password: 123
+  #    virtual-host: /recognition
+  #  redis:
+  #    host=localhost
+  #    port=6379
+  application:
+    name: recognition-server
+#mybatis:
+#  type-handlers-package: io.chenyiax.handler
+tencent:
+  cloud:
+    secretId: ${TENCENT_CLOUD_SECRET_ID}  # 通过环境变量注入
+    secretKey: ${TENCENT_CLOUD_SECRET_KEY}
+  wechat:
+    appid: ${WECHAT_APPID}
+    secret: ${WECHAT_SECRET}
+logging:
+  level:
+    org.springframework.security: debug
+
+#  cloud:
+#    nacos:
+#      discovery:
+#        # 配置Nacos注册中心地址
+#        server-addr: localhost:8848
