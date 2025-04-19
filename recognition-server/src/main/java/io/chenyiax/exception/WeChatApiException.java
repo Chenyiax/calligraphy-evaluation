@@ -1,14 +1,10 @@
 package io.chenyiax.exception;
 
-public class WeChatApiException extends RuntimeException {
-    private final Integer errorCode;
+import lombok.Getter;
 
-    public WeChatApiException(Integer errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-    }
-
-    public Integer getErrorCode() {
-        return errorCode;
+@Getter
+public class WeChatApiException extends BusinessException {
+    public WeChatApiException(String message) {
+        super(1001, message);
     }
 }

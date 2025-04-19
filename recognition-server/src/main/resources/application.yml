@@ -26,6 +26,9 @@ tencent:
   wechat:
     appid: ${WECHAT_APPID}
     secret: ${WECHAT_SECRET}
+token:
+  key: ${JWT_KEY}
+  validity: 1800000
 logging:
   level:
     org.springframework.security: debug

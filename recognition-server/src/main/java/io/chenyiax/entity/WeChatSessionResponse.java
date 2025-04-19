@@ -6,6 +6,6 @@ import lombok.Data;
 public class WeChatSessionResponse {
     private String openid;
     private String session_key;
-    private Integer errcode; // 微信错误码（0 表示成功）
+    private Integer errcode;
     private String errmsg;
 }

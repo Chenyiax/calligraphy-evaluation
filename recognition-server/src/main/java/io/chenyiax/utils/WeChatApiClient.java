@@ -3,48 +3,65 @@ package io.chenyiax.utils;
 import io.chenyiax.configuration.WeChatConfig;
 import io.chenyiax.entity.WeChatSessionResponse;
 import io.chenyiax.exception.WeChatApiException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * This component is responsible for interacting with the WeChat API to obtain session information.
+ * It uses the provided WeChat configuration and RestTemplate to send requests to the WeChat server.
+ */
 @Component
+@RequiredArgsConstructor
 public class WeChatApiClient {
-    @Autowired
-    WeChatConfig weChatConfig;
-
+    /**
+     * Configuration object for WeChat, containing information such as app ID and secret.
+     * This object is used to build the request URL for the WeChat API.
+     */
+    private final WeChatConfig weChatConfig;
+    /**
+     * RestTemplate instance used to send HTTP requests to the WeChat API.
+     * It simplifies the process of making HTTP requests and handling responses.
+     */
     private final RestTemplate restTemplate;
 
-    // 通过构造函数注入 RestTemplate
-    public WeChatApiClient(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
-
     /**
-     * 通过 code 获取微信会话信息
+     * Obtain WeChat session information using a code.
+     * This method constructs a request URL based on the provided code, then sends a GET request to the WeChat API.
+     * It parses the response and checks for errors. If an error occurs, it throws a WeChatApiException.
+     *
+     * @param code The code provided by WeChat during the login process.
+     * @return A WeChatSessionResponse object containing the session information.
+     * @throws WeChatApiException If the WeChat API returns an error, the response is empty, or the HTTP request fails.
      */
     public WeChatSessionResponse getSessionByCode(String code) {
+        // Build the request URL for the WeChat session API
         String url = buildSessionUrl(code);
         try {
-            // 发送 GET 请求并解析响应
+            // Send a GET request to the WeChat API and parse the response into a WeChatSessionResponse object
             WeChatSessionResponse response = restTemplate.getForObject(url, WeChatSessionResponse.class);
             if (response == null) {
-                throw new WeChatApiException(-1, "WeChat interface returns empty response");
+                throw new WeChatApiException("WeChat interface returns empty response");
             }
-            // 检查微信错误码
+            // Check the error code returned by the WeChat API
             if (response.getErrcode() != null && response.getErrcode() != 0) {
-                throw new WeChatApiException(response.getErrcode(), response.getErrmsg());
+                throw new WeChatApiException(response.getErrmsg());
             }
             return response;
         } catch (HttpClientErrorException e) {
-            throw new WeChatApiException(-1, "HTTP request fail: " + e.getMessage());
+            // Throw an exception if the HTTP request fails
+            throw new WeChatApiException("HTTP request fail: " + e.getMessage());
         }
     }
 
     /**
-     * 构建微信接口 URL
+     * Build the URL for the WeChat session API.
+     * This method uses the app ID and secret from the WeChat configuration, along with the provided code,
+     * to construct a complete URL for the WeChat API.
+     *
+     * @param code The code provided by WeChat during the login process.
+     * @return A string representing the complete URL for the WeChat session API.
      */
     private String buildSessionUrl(String code) {
         return String.format(

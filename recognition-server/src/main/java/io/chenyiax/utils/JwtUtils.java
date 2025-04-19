@@ -1,59 +1,87 @@
 package io.chenyiax.utils;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.chenyiax.exception.SessionExpiredException;
+import io.chenyiax.configuration.JwtConfig;
+import io.chenyiax.exception.JwtException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.util.Calendar;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-
+/**
+ * This utility class is used to create and parse JWT (JSON Web Token) tokens.
+ * It leverages the Auth0 JWT library to handle token generation and verification.
+ * The {@link Component} annotation marks this class as a Spring component,
+ * allowing it to be automatically detected and managed by the Spring container.
+ * The {@link RequiredArgsConstructor} annotation from Lombok generates a constructor
+ * with required arguments for all final fields, simplifying dependency injection.
+ */
 @Component
+@RequiredArgsConstructor
 public class JwtUtils {
-    //Jwt秘钥
-    private static final String key = "abcdefghijklmn";
+    private final JwtConfig jwtConfig;
+    private final Clock clock;
 
-    //根据用户信息创建Jwt令牌
-    public static String createJwt(UserDetails user) {
-        Algorithm algorithm = Algorithm.HMAC256(key);
-        Calendar calendar = Calendar.getInstance();
-        Date now = calendar.getTime();
-        calendar.add(Calendar.SECOND, 3600 * 24 * 7);
+    /**
+     * Creates a JWT token based on the provided user information.
+     * This method uses the HMAC256 algorithm to sign the token and includes user - related claims such as username and authorities.
+     *
+     * @param user The user details object containing the user's username and authorities.
+     * @return A string representing the generated JWT token.
+     */
+    public String createToken(UserDetails user) {
+        Algorithm algorithm = Algorithm.HMAC256(jwtConfig.getKey());
+        Instant now = Instant.now(clock);
+        Instant expiresAt = now.plus(jwtConfig.getValidity(), ChronoUnit.SECONDS);
+
         return JWT.create()
-                .withClaim("name", user.getUsername())  //配置JWT自定义信息
-                .withClaim("authorities", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
-                .withExpiresAt(calendar.getTime())  //设置过期时间
-                .withIssuedAt(now)    //设置创建创建时间
-                .sign(algorithm);   //最终签名
+                .withClaim("name", user.getUsername())
+                .withClaim("authorities", user.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toList()))
+                .withExpiresAt(Date.from(expiresAt))
+                .withIssuedAt(Date.from(now))
+                .sign(algorithm);
     }
 
-    //根据Jwt验证并解析用户信息
-    public static UserDetails resolveJwt(String token) {
-        Algorithm algorithm = Algorithm.HMAC256(key);
-        JWTVerifier jwtVerifier = JWT.require(algorithm).build();
+    /**
+     * Parses and verifies a JWT token.
+     * This method checks the token's signature and expiration time. If the token is valid,
+     * it extracts the user information from the claims and creates a UserDetails object.
+     *
+     * @param token The JWT token string to be parsed and verified.
+     * @return A UserDetails object containing the user information extracted from the token.
+     * @throws JwtException If the token is invalid or has expired.
+     */
+    public UserDetails parseToken(String token) throws JwtException {
         try {
-            DecodedJWT verify = jwtVerifier.verify(token);  //对JWT令牌进行验证，看看是否被修改
-            Map<String, Claim> claims = verify.getClaims();  //获取令牌中内容
-            if (new Date().after(claims.get("exp").asDate())) //如果是过期令牌则返回null
-                throw new SessionExpiredException();
-            else
-                //重新组装为UserDetails对象，包括用户名、授权信息等
-                return User
-                        .withUsername(claims.get("name").asString())
-                        .password("")
-                        .authorities(claims.get("authorities").asArray(String.class))
-                        .build();
+            Algorithm algorithm = Algorithm.HMAC256(jwtConfig.getKey());
+            DecodedJWT jwt = JWT.require(algorithm)
+                    .build()
+                    .verify(token);
+            Map<String, Claim> claims = jwt.getClaims();
+            if (Instant.now(clock).isAfter(claims.get("exp").asDate().toInstant())) {
+                throw new JwtException("Token expired");
+            }
+
+            return User.withUsername(claims.get("name").asString())
+                    .password("")
+                    .authorities(claims.get("authorities").asArray(String.class))
+                    .build();
         } catch (JWTVerificationException e) {
-            return null;
+            throw new JwtException("Invalid token" + e);
         }
     }
 }

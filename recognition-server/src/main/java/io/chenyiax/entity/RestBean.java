@@ -2,38 +2,82 @@ package io.chenyiax.entity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.chenyiax.exception.JsonException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * A generic class representing a unified RESTful response bean.
+ * It encapsulates the response status code, message, and actual business data.
+ *
+ * @param <T> The type of the actual business data.
+ */
 @Data
 @AllArgsConstructor
 public class RestBean<T> {
-    private int code;    // 状态码（例如 200=成功，401=未授权）
-    private String message; // 提示信息
-    private T data;      // 实际业务数据
+    /**
+     * The status code of the response.
+     * Common values include 200 for success, 401 for unauthorized access, etc.
+     */
+    private int code;
 
-    // 快速创建成功响应（无数据）
+    /**
+     * The prompt message of the response, providing additional information about the result.
+     */
+    private String message;
+
+    /**
+     * The actual business data returned by the service.
+     * The type is generic and can be any object.
+     */
+    private T data;
+
+    /**
+     * Quickly create a successful response without data.
+     *
+     * @param <T> The type of the actual business data.
+     * @return A RestBean instance representing a successful response.
+     */
     public static <T> RestBean<T> success() {
-        return new RestBean<>(200, "操作成功", null);
+        return new RestBean<>(200, "Success", null);
     }
 
-    // 快速创建成功响应（带数据）
+    /**
+     * Quickly create a successful response with data.
+     *
+     * @param <T>  The type of the actual business data.
+     * @param data The actual business data to be included in the response.
+     * @return A RestBean instance representing a successful response with data.
+     */
     public static <T> RestBean<T> success(T data) {
-        return new RestBean<>(200, "操作成功", data);
+        return new RestBean<>(200, "Success", data);
     }
 
-    // 快速创建失败响应
+    /**
+     * Quickly create a failed response.
+     *
+     * @param <T>     The type of the actual business data.
+     * @param code    The status code of the failed response.
+     * @param message The prompt message explaining the reason for the failure.
+     * @return A RestBean instance representing a failed response.
+     */
     public static <T> RestBean<T> failure(int code, String message) {
         return new RestBean<>(code, message, null);
     }
 
-    // 将对象转为 JSON 字符串（需要 JSON 库）
+    /**
+     * Convert the RestBean object to a JSON string.
+     * This method uses Jackson's ObjectMapper to perform serialization.
+     *
+     * @return A JSON string representing the RestBean object.
+     * @throws JsonException If a JSON processing exception occurs during serialization.
+     */
     public String asJsonString() {
-        // 使用 Jackson 或 Gson 进行序列化
+        // Use Jackson to serialize the object
         try {
             return new ObjectMapper().writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new JsonException("JSON serialization failed");
         }
     }
 }

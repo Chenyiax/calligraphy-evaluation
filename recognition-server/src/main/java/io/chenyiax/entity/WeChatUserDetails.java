@@ -11,55 +11,119 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * This class represents the user details for WeChat users, implementing the Spring Security's UserDetails interface.
+ * It encapsulates the user information and provides methods to retrieve user - related security information,
+ * such as authorities, password, username, and account status.
+ *
+ * @author Your Name (Replace with actual author)
+ */
 @Data
 public class WeChatUserDetails implements UserDetails {
+    /**
+     * An instance of the User class that stores the actual user information.
+     * It contains fields like openid, sessionKey, and user roles.
+     */
     private User user;
 
+    /**
+     * Constructs a new WeChatUserDetails object with the given User instance.
+     *
+     * @param user The User object containing the WeChat user's information.
+     */
     public WeChatUserDetails(User user) {
         this.user = user;
     }
 
+    /**
+     * Retrieves the collection of authorities granted to the user.
+     * It maps each role in the user's role list to a SimpleGrantedAuthority object,
+     * prefixing each role with "ROLE_".
+     *
+     * @return A collection of GrantedAuthority objects representing the user's authorities.
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // 根据业务需求返回权限，这里返回空集合
+        // Convert the user's role list to a collection of GrantedAuthority objects
         return user.getAuth().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves the password used for authentication.
+     * Since WeChat login does not use a traditional password,
+     * the session key is used as a substitute.
+     *
+     * @return The session key of the WeChat user.
+     */
     @Override
     public String getPassword() {
-        // 微信登录没有传统密码，可以用sessionKey代替
+        // Use the session key as the password for authentication
         return user.getSessionKey();
     }
 
+    /**
+     * Retrieves the username used for authentication.
+     * The WeChat user's openid is used as the username.
+     *
+     * @return The openid of the WeChat user.
+     */
     @Override
     public String getUsername() {
-        // 使用openid作为用户名
+        // Use the openid as the username for authentication
         return user.getOpenid();
     }
 
+    /**
+     * Checks if the user's account has not expired.
+     * Since WeChat users typically do not have an account expiration mechanism,
+     * this method always returns true.
+     *
+     * @return true if the account has not expired, false otherwise.
+     */
     @Override
     public boolean isAccountNonExpired() {
-        // 账户是否未过期 - 微信用户通常不过期
+        // WeChat users usually do not have an account expiration
         return true;
     }
 
+    /**
+     * Checks if the user's account is not locked.
+     * Since WeChat users are typically not locked,
+     * this method always returns true.
+     *
+     * @return true if the account is not locked, false otherwise.
+     */
     @Override
     public boolean isAccountNonLocked() {
-        // 账户是否未锁定 - 微信用户通常不锁定
+        // WeChat users are usually not locked
         return true;
     }
 
+    /**
+     * Checks if the user's credentials have not expired.
+     * Although the WeChat session key has an expiration time,
+     * this method simplifies the process and always returns true.
+     *
+     * @return true if the credentials have not expired, false otherwise.
+     */
     @Override
     public boolean isCredentialsNonExpired() {
-        // 凭证是否未过期 - 微信session_key有过期时间，这里简化处理
+        // Simplify the session key expiration check and always return true
         return true;
     }
 
+    /**
+     * Checks if the user's account is enabled.
+     * Since WeChat users are typically enabled,
+     * this method always returns true.
+     *
+     * @return true if the account is enabled, false otherwise.
+     */
     @Override
     public boolean isEnabled() {
-        // 账户是否启用 - 微信用户通常启用
+        // WeChat users are usually enabled
         return true;
     }
 }
