@@ -12,22 +12,21 @@ import java.time.Duration;
 import java.util.Arrays;
 
 /**
- * This class is a configuration class for Spring's RestTemplate.
- * It is used to define and customize the RestTemplate bean, including setting timeouts
- * and adding a custom message converter to support parsing JSON data in the 'text/plain' format.
+ * 该类是 Spring 的 RestTemplate 配置类。
+ * 用于定义和自定义 RestTemplate bean，包括设置超时时间
+ * 并添加自定义消息转换器以支持解析 'text/plain' 格式的 JSON 数据。
  */
 @Configuration
 public class RestTemplateConfig {
 
     /**
-     * Creates and configures a RestTemplate bean.
-     * This method uses the RestTemplateBuilder provided by Spring Boot to create a RestTemplate instance.
-     * It adds a custom MappingJackson2HttpMessageConverter to support parsing JSON data in both
-     * 'application/json' and 'text/plain' formats. Additionally, it sets the connection timeout
-     * and read timeout for the RestTemplate.
+     * 创建并配置一个 RestTemplate bean。
+     * 此方法使用 Spring Boot 提供的 RestTemplateBuilder 来创建 RestTemplate 实例。
+     * 它添加了一个自定义的 MappingJackson2HttpMessageConverter，以支持解析 'application/json' 和 'text/plain' 格式的 JSON 数据。
+     * 此外，还设置了 RestTemplate 的连接超时时间和读取超时时间。
      *
-     * @param builder The RestTemplateBuilder provided by Spring Boot, used to build the RestTemplate.
-     * @return A configured RestTemplate instance.
+     * @param builder Spring Boot 提供的 RestTemplateBuilder，用于构建 RestTemplate。
+     * @return 一个配置好的 RestTemplate 实例。
      */
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {

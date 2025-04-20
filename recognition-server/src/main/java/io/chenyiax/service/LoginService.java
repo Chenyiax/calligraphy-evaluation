@@ -14,9 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 /**
- * This service class is responsible for handling user login operations,
- * especially for WeChat login. It interacts with the WeChat API,
- * manages user information in the database, and generates JWT tokens.
+ * LoginService 类是一个服务层组件，负责处理微信用户的登录业务逻辑。
+ * 它使用 Spring 的 @Service 注解将其注册为一个服务 bean，
+ * 并通过 @RequiredArgsConstructor 注解自动生成包含 final 字段的构造函数，
+ * 使用 @Transactional 注解保证业务操作的事务性。
  */
 @Service
 @RequiredArgsConstructor
@@ -27,11 +28,14 @@ public class LoginService {
     private final JwtUtils jwtUtils;
 
     /**
-     * Handles the user login process using the WeChat authorization code.
+     * 处理微信用户的登录逻辑。
+     * 通过微信提供的临时登录凭证 code 获取用户会话信息，
+     * 若用户不存在则创建新用户，最后为用户生成 JWT 令牌。
      *
-     * @param code The authorization code provided by WeChat during the login process.
-     * @return A JWT token representing the user's login session.
-     * @throws UserCreationException If the user creation fails.
+     * @param code 微信客户端返回的临时登录凭证，用于向微信服务器验证用户身份。
+     * @return 生成的 JWT 令牌字符串，用于后续的身份验证。
+     * @throws WeChatApiException 当调用微信接口获取会话信息失败时抛出该异常。
+     * @throws UserCreationException 当创建新用户失败时抛出该异常。
      */
     public String login(String code) {
         WeChatSessionResponse weChatSessionResponse = weChatApiClient.getSessionByCode(code);
@@ -58,10 +62,10 @@ public class LoginService {
     }
 
     /**
-     * Creates a JWT token for the given user.
+     * 为指定用户创建 JWT 令牌。
      *
-     * @param user The user object for which the token is to be created.
-     * @return A JWT token representing the user's login session.
+     * @param user 包含用户信息的 User 对象，用于生成 JWT 令牌。
+     * @return 生成的 JWT 令牌字符串。
      */
     private String createToken(User user) {
         WeChatUserDetails weChatUserDetails = new WeChatUserDetails(user);

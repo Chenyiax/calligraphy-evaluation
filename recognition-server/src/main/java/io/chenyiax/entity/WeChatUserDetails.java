@@ -11,119 +11,105 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 /**
- * This class represents the user details for WeChat users, implementing the Spring Security's UserDetails interface.
- * It encapsulates the user information and provides methods to retrieve user - related security information,
- * such as authorities, password, username, and account status.
- *
- * @author Your Name (Replace with actual author)
+ * WeChatUserDetails 类实现了 Spring Security 的 UserDetails 接口，
+ * 用于封装微信用户的详细信息，以便在 Spring Security 框架中进行身份验证和授权操作。
  */
 @Data
 public class WeChatUserDetails implements UserDetails {
+
     /**
-     * An instance of the User class that stores the actual user information.
-     * It contains fields like openid, sessionKey, and user roles.
+     * 封装的用户对象，包含用户的基本信息、权限等。
      */
     private User user;
 
     /**
-     * Constructs a new WeChatUserDetails object with the given User instance.
+     * 构造函数，用于初始化 WeChatUserDetails 对象。
      *
-     * @param user The User object containing the WeChat user's information.
+     * @param user 微信用户对象，包含用户的相关信息。
      */
     public WeChatUserDetails(User user) {
         this.user = user;
     }
 
     /**
-     * Retrieves the collection of authorities granted to the user.
-     * It maps each role in the user's role list to a SimpleGrantedAuthority object,
-     * prefixing each role with "ROLE_".
+     * 获取用户的权限集合。
+     * 从用户对象中获取权限列表，并将其转换为 Spring Security 所需的 GrantedAuthority 集合。
      *
-     * @return A collection of GrantedAuthority objects representing the user's authorities.
+     * @return 包含用户权限的集合。
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Convert the user's role list to a collection of GrantedAuthority objects
+        // 将用户的权限列表转换为 SimpleGrantedAuthority 集合
         return user.getAuth().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Retrieves the password used for authentication.
-     * Since WeChat login does not use a traditional password,
-     * the session key is used as a substitute.
+     * 获取用户的密码。
+     * 这里使用用户的会话密钥作为密码，用于身份验证。
      *
-     * @return The session key of the WeChat user.
+     * @return 用户的会话密钥。
      */
     @Override
     public String getPassword() {
-        // Use the session key as the password for authentication
         return user.getSessionKey();
     }
 
     /**
-     * Retrieves the username used for authentication.
-     * The WeChat user's openid is used as the username.
+     * 获取用户的用户名。
+     * 这里使用用户的开放 ID 作为用户名，用于身份验证。
      *
-     * @return The openid of the WeChat user.
+     * @return 用户的开放 ID。
      */
     @Override
     public String getUsername() {
-        // Use the openid as the username for authentication
         return user.getOpenid();
     }
 
     /**
-     * Checks if the user's account has not expired.
-     * Since WeChat users typically do not have an account expiration mechanism,
-     * this method always returns true.
+     * 判断用户账户是否未过期。
+     * 这里默认返回 true，表示用户账户永不过期。
      *
-     * @return true if the account has not expired, false otherwise.
+     * @return 如果账户未过期返回 true，否则返回 false。
      */
     @Override
     public boolean isAccountNonExpired() {
-        // WeChat users usually do not have an account expiration
         return true;
     }
 
     /**
-     * Checks if the user's account is not locked.
-     * Since WeChat users are typically not locked,
-     * this method always returns true.
+     * 判断用户账户是否未锁定。
+     * 这里默认返回 true，表示用户账户永不锁定。
      *
-     * @return true if the account is not locked, false otherwise.
+     * @return 如果账户未锁定返回 true，否则返回 false。
      */
     @Override
     public boolean isAccountNonLocked() {
-        // WeChat users are usually not locked
         return true;
     }
 
     /**
-     * Checks if the user's credentials have not expired.
-     * Although the WeChat session key has an expiration time,
-     * this method simplifies the process and always returns true.
+     * 判断用户的凭证是否未过期。
+     * 这里默认返回 true，表示用户的凭证永不过期。
      *
-     * @return true if the credentials have not expired, false otherwise.
+     * @return 如果凭证未过期返回 true，否则返回 false。
      */
     @Override
     public boolean isCredentialsNonExpired() {
-        // Simplify the session key expiration check and always return true
         return true;
     }
 
     /**
-     * Checks if the user's account is enabled.
-     * Since WeChat users are typically enabled,
-     * this method always returns true.
+     * 判断用户是否已启用。
+     * 这里默认返回 true，表示用户账户已启用。
      *
-     * @return true if the account is enabled, false otherwise.
+     * @return 如果用户已启用返回 true，否则返回 false。
      */
     @Override
     public boolean isEnabled() {
-        // WeChat users are usually enabled
         return true;
     }
 }

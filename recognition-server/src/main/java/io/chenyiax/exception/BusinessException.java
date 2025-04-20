@@ -4,28 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * Represents a custom business exception that extends the {@link RuntimeException}.
- * This exception is designed to handle business - related errors in the application.
- * It includes a custom error code and a descriptive error message.
- *
- * <p>The {@link Getter} annotation from Lombok is used to automatically generate getter methods
- * for the {@code code} and {@code message} fields.
- * The {@link AllArgsConstructor} annotation generates a constructor that takes all fields as parameters.</p>
- *
- * @author Your Name (Replace with actual author)
+ * 自定义业务异常类，继承自 RuntimeException，用于在业务逻辑处理过程中抛出异常。
+ * 该异常类包含错误码和错误消息，方便在业务出错时传递详细的错误信息。
  */
 @Getter
 @AllArgsConstructor
 public class BusinessException extends RuntimeException {
+
     /**
-     * A custom error code representing the type of business error.
-     * This code can be used by the application to identify and handle different types of errors.
+     * 业务异常的错误码，用于标识不同类型的业务错误。
      */
     private int code;
 
     /**
-     * A descriptive error message providing more details about the business error.
-     * This message can be used for logging, debugging, or presenting to the user.
+     * 业务异常的错误消息，用于描述业务错误的具体信息。
      */
     private String message;
 }

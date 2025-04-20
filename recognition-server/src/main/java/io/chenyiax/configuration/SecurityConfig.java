@@ -27,21 +27,23 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
- * This configuration class is used to enable and configure Spring Security for the application.
- * It defines beans for password encoding, security filter chains, and CORS configuration.
+ * 此配置类用于为应用程序启用并配置 Spring Security。
+ * 它定义了密码编码、安全过滤器链和 CORS 配置的 bean。
  */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    /**
+     * JWT 身份验证过滤器，用于处理 JWT 令牌的验证和身份验证。
+     */
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
-     * Creates a BCrypt password encoder bean with a strength factor of 10.
-     * The strength factor determines the computational cost of hashing passwords,
-     * which affects the security and performance of password hashing.
+     * 创建一个强度因子为 10 的 BCrypt 密码编码器 bean。
+     * 强度因子决定了哈希密码的计算成本，这会影响密码哈希的安全性和性能。
      *
-     * @return A BCryptPasswordEncoder instance.
+     * @return 一个 BCryptPasswordEncoder 实例。
      */
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -49,69 +51,70 @@ public class SecurityConfig {
     }
 
     /**
-     * Configures the security filter chain for the application.
-     * This method sets up various security features such as CSRF protection, CORS,
-     * request authorization, exception handling, session management, and JWT authentication.
+     * 配置应用程序的安全过滤器链。
+     * 此方法设置了各种安全功能，如 CSRF 保护、CORS、请求授权、异常处理、会话管理和 JWT 身份验证。
      *
-     * @param http The HttpSecurity object used to configure security settings.
-     * @return A SecurityFilterChain instance representing the configured security filter chain.
-     * @throws Exception If an error occurs during the configuration process.
+     * @param http 用于配置安全设置的 HttpSecurity 对象。
+     * @return 一个 SecurityFilterChain 实例，表示配置好的安全过滤器链。
+     * @throws Exception 如果在配置过程中发生错误。
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         return http
-                // Disable CSRF protection since the application is stateless and uses JWT
+                // 禁用 CSRF 保护，因为应用程序是无状态的且使用 JWT
                 .csrf(AbstractHttpConfigurer::disable)
-                // Configure CORS using the provided corsConfigurationSource bean
+                // 使用提供的 corsConfigurationSource bean 配置 CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // Configure request authorization rules
+                // 配置请求授权规则
                 .authorizeHttpRequests(conf -> {
-                    // Permit all requests to the specified endpoints
+                    // 允许所有对指定端点的请求
                     conf.requestMatchers("/api/auth/*").permitAll()
-                            // Require authentication for all other requests
+                            // 要求所有其他请求进行身份验证
                             .anyRequest().authenticated();
                 })
-                // Configure exception handling
+                // 配置异常处理
                 .exceptionHandling(conf -> {
-                    // Set the handler for access denied exceptions
+                    // 设置访问被拒绝异常的处理程序
                     conf.accessDeniedHandler(this::handleProcess);
-                    // Set the handler for authentication exceptions
+                    // 设置身份验证异常的处理程序
                     conf.authenticationEntryPoint(this::handleProcess);
                 })
-                // Configure session management
+                // 配置会话管理
                 .sessionManagement(conf -> {
-                    // Set the session creation policy to stateless
+                    // 将会话创建策略设置为无状态
                     conf.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 })
-                // Add the JWT authentication filter before the UsernamePasswordAuthenticationFilter
+                // 在 UsernamePasswordAuthenticationFilter 之前添加 JWT 身份验证过滤器
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     /**
-     * Handles authentication and access denied exceptions.
-     * This method writes a JSON response containing the error information to the client.
+     * 处理身份验证和访问被拒绝异常。
+     * 此方法将包含错误信息的 JSON 响应写入客户端。
      *
-     * @param request                   The HTTP request object.
-     * @param response                  The HTTP response object.
-     * @param exceptionOrAuthentication The exception or authentication object.
-     * @throws IOException If an I/O error occurs while writing the response.
+     * @param request                   HTTP 请求对象。
+     * @param response                  HTTP 响应对象。
+     * @param exceptionOrAuthentication 异常或身份验证对象。
+     * @throws IOException 如果在写入响应时发生 I/O 错误。
      */
     private void handleProcess(HttpServletRequest request,
                                HttpServletResponse response,
                                Object exceptionOrAuthentication) throws IOException {
-        // Set the response content type to JSON with UTF-8 encoding
+        // 设置响应内容类型为 JSON 并使用 UTF-8 编码
         response.setContentType("application/json;charset=utf-8");
-        // Get the writer to write the response content
+        // 获取写入响应内容的写入器
         PrintWriter writer = response.getWriter();
 
-        // Handle access denied exceptions
+        // 处理访问被拒绝异常
         if (exceptionOrAuthentication instanceof AccessDeniedException exception) {
+            // 写入 403 错误信息的 JSON 字符串
             writer.write(RestBean.failure(403, exception.getMessage()).asJsonString());
         }
-        // Handle authentication exceptions
+        // 处理身份验证异常
         else if (exceptionOrAuthentication instanceof AuthenticationException exception) {
+            // 写入 401 错误信息的 JSON 字符串
             writer.write(RestBean.failure(401, exception.getMessage()).asJsonString());
         }
     }
@@ -119,27 +122,26 @@ public class SecurityConfig {
     //    @Bean
 
     /**
-     * Creates a CORS configuration source bean.
-     * This method configures CORS settings to allow requests from a specific origin,
-     * with any headers and methods, and supports credentials.
+     * 创建一个 CORS 配置源 bean。
+     * 此方法配置 CORS 设置以允许来自特定源的请求，支持任何标头和方法，并支持凭证。
      *
-     * @return A CorsConfigurationSource instance representing the CORS configuration.
+     * @return 一个 CorsConfigurationSource 实例，表示 CORS 配置。
      */
     public CorsConfigurationSource corsConfigurationSource() {
-        // Create a new CORS configuration object
+        // 创建一个新的 CORS 配置对象
         CorsConfiguration corsConfig = new CorsConfiguration();
-        // Allow credentials to be included in CORS requests
+        // 允许在 CORS 请求中包含凭证
         corsConfig.setAllowCredentials(true);
-        // Add an allowed origin
+        // 添加一个允许的源
         corsConfig.addAllowedOrigin("http://localhost:3000");
-        // Allow all headers in CORS requests
+        // 允许 CORS 请求中的所有标头
         corsConfig.addAllowedHeader("*");
-        // Allow all HTTP methods in CORS requests
+        // 允许 CORS 请求中的所有 HTTP 方法
         corsConfig.addAllowedMethod("*");
 
-        // Create a URL-based CORS configuration source
+        // 创建一个基于 URL 的 CORS 配置源
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Register the CORS configuration for all endpoints
+        // 为所有端点注册 CORS 配置
         source.registerCorsConfiguration("/**", corsConfig);
         return source;
     }

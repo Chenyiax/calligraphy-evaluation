@@ -9,11 +9,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * This class serves as a global exception handler, intercepting and handling various exceptions
- * thrown during the application's execution. It returns a unified RESTful response format
- * using the {@link RestBean} class.
- *
- * @see RestControllerAdvice
+ * 全局异常处理器类，用于统一处理应用程序中抛出的各种异常。
+ * 使用 @RestControllerAdvice 注解，表明这是一个全局的控制器增强类，
+ * 可以捕获控制器层抛出的异常并返回统一格式的响应数据。
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {

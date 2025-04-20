@@ -8,62 +8,67 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+
 /**
- * This component is responsible for interacting with the WeChat API to obtain session information.
- * It uses the provided WeChat configuration and RestTemplate to send requests to the WeChat server.
+ * WeChatApiClient 是一个用于调用微信接口的客户端类。
+ * 该类借助 Spring 的依赖注入机制，注入微信配置信息和 RestTemplate 来完成与微信接口的交互。
+ * 它提供了通过微信临时登录凭证 code 获取会话信息的功能。
  */
 @Component
 @RequiredArgsConstructor
 public class WeChatApiClient {
+
     /**
-     * Configuration object for WeChat, containing information such as app ID and secret.
-     * This object is used to build the request URL for the WeChat API.
+     * 注入微信配置信息，包含 appid、secret 等关键信息，用于构造微信接口请求的 URL。
      */
     private final WeChatConfig weChatConfig;
+
     /**
-     * RestTemplate instance used to send HTTP requests to the WeChat API.
-     * It simplifies the process of making HTTP requests and handling responses.
+     * 注入 RestTemplate，用于发送 HTTP 请求，与微信接口进行数据交互。
      */
     private final RestTemplate restTemplate;
 
     /**
-     * Obtain WeChat session information using a code.
-     * This method constructs a request URL based on the provided code, then sends a GET request to the WeChat API.
-     * It parses the response and checks for errors. If an error occurs, it throws a WeChatApiException.
+     * 通过微信临时登录凭证 code 获取会话信息。
+     * 该方法会调用微信的 `jscode2session` 接口，获取用户的 openid、session_key 等信息。
      *
-     * @param code The code provided by WeChat during the login process.
-     * @return A WeChatSessionResponse object containing the session information.
-     * @throws WeChatApiException If the WeChat API returns an error, the response is empty, or the HTTP request fails.
+     * @param code 微信客户端返回的临时登录凭证，用于向微信服务器验证用户身份。
+     * @return 返回一个包含微信会话信息的对象，包含 openid、session_key 等字段。
+     * @throws WeChatApiException 如果在请求过程中出现 HTTP 错误、微信接口返回错误信息或返回结果为空。
      */
     public WeChatSessionResponse getSessionByCode(String code) {
-        // Build the request URL for the WeChat session API
+        // 构建调用微信 `jscode2session` 接口的 URL
         String url = buildSessionUrl(code);
         try {
-            // Send a GET request to the WeChat API and parse the response into a WeChatSessionResponse object
+            // 发送 HTTP GET 请求，获取微信接口的响应
             WeChatSessionResponse response = restTemplate.getForObject(url, WeChatSessionResponse.class);
+            // 检查响应是否为空
             if (response == null) {
+                // 若响应为空，抛出微信接口异常
                 throw new WeChatApiException("WeChat interface returns empty response");
             }
-            // Check the error code returned by the WeChat API
+            // 检查微信接口是否返回错误码
             if (response.getErrcode() != null && response.getErrcode() != 0) {
+                // 若返回错误码，抛出包含错误信息的微信接口异常
                 throw new WeChatApiException(response.getErrmsg());
             }
+            // 若请求成功，返回微信会话信息
             return response;
         } catch (HttpClientErrorException e) {
-            // Throw an exception if the HTTP request fails
+            // 若发生 HTTP 请求错误，抛出包含错误信息的微信接口异常
             throw new WeChatApiException("HTTP request fail: " + e.getMessage());
         }
     }
 
     /**
-     * Build the URL for the WeChat session API.
-     * This method uses the app ID and secret from the WeChat configuration, along with the provided code,
-     * to construct a complete URL for the WeChat API.
+     * 构建调用微信 `jscode2session` 接口的 URL。
+     * 该方法根据微信配置信息和传入的临时登录凭证 code 生成完整的请求 URL。
      *
-     * @param code The code provided by WeChat during the login process.
-     * @return A string representing the complete URL for the WeChat session API.
+     * @param code 微信客户端返回的临时登录凭证。
+     * @return 返回一个完整的调用微信 `jscode2session` 接口的 URL 字符串。
      */
     private String buildSessionUrl(String code) {
+        // 使用 String.format 方法，将微信配置信息和 code 填充到 URL 模板中
         return String.format(
                 "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
                 weChatConfig.getAppid(), weChatConfig.getSecret(), code
